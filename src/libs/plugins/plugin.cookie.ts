@@ -14,7 +14,7 @@ const cookiePlugin = fp(
         secure: envCookieConfig.COOKIE_SECURE, // true in prod (HTTPS), false in dev (HTTP)
         httpOnly: true,
         path: "/",
-        domain: ".vercel.app",
+        // domain: ".vercel.app",
       },
     } as FastifyCookieOptions);
   },
