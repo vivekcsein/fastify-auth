@@ -39,6 +39,7 @@ export const refreshTokenAuthController = async (
     const { session } = result.data as { session: Session };
     if (!session?.access_token || !session?.refresh_token) {
       return reply.status(500).send({
+        success: false,
         status: "error",
         message: "Token generation failed",
         data: null,
