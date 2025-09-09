@@ -7,10 +7,17 @@ const corsPlugin = fp<FastifyCorsOptions>(
   async (fastify: FastifyInstance, options) => {
     await fastify.register(cors, {
       ...options,
-      methods: ["GET", "POST", "PUT", "DELETE"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       origin: allowedOrigins,
       credentials: true,
-      allowedHeaders: ["Authorization", "Content-Type"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+      ],
+      exposedHeaders: ["Set-Cookie"],
     });
   },
   {
