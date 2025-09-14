@@ -77,7 +77,7 @@ export const registerUser = async (user: IUserSignup) => {
         });
 
         if (error) {
-            return {
+            throw {
                 success: false,
                 statusCode: 400,
                 message: error.message,

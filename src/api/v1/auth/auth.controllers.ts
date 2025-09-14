@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthError, Session, User } from "@supabase/supabase-js";
+import { getCookieExpiryInDays, getCookieExpiryInMinutes } from "../../../libs/utils/utils.app";
 
 import {
   IUserProfileRoleType,
@@ -13,11 +14,10 @@ import {
   getUserProfile,
   refreshTokenUser,
   registerUser,
-  setUserToiLocalUser,
   signinUser,
-  signoutUser
+  signoutUser,
+  setUserToiLocalUser,
 } from "./auth.helper";
-import { getCookieExpiryInDays, getCookieExpiryInMinutes } from "../../../libs/utils/utils.app";
 
 export const refreshTokenAuthController = async (
   req: FastifyRequest,
@@ -46,9 +46,12 @@ export const refreshTokenAuthController = async (
       });
     }
 
+    const accessTokenExpiresIn = remember ? getCookieExpiryInDays(1) : getCookieExpiryInMinutes(15);
+
     reply.cookie("accesstoken", session.access_token, {
-      maxAge: remember ? getCookieExpiryInDays(1) : getCookieExpiryInMinutes(15),
+      maxAge: accessTokenExpiresIn,
     });
+
     reply.cookie("refreshtoken", session.refresh_token, {
       maxAge: remember ? getCookieExpiryInDays(30) : getCookieExpiryInDays(7),
     });
@@ -56,6 +59,7 @@ export const refreshTokenAuthController = async (
     return reply.status(200).send({
       success: true,
       message: "Tokens are refreshed successfully",
+      tokenExpiresIn: accessTokenExpiresIn,
       data: null,
     });
 
@@ -128,8 +132,10 @@ export const signinAuthController = async (
 
     const userDatafromDB = await getUserProfile(email);
 
+    const accessTokenExpiresIn = remember ? getCookieExpiryInDays(1) : getCookieExpiryInMinutes(15);
+
     reply.cookie("accesstoken", session.access_token, {
-      maxAge: remember ? getCookieExpiryInDays(1) : getCookieExpiryInMinutes(15),
+      maxAge: accessTokenExpiresIn,
     });
     reply.cookie("refreshtoken", session.refresh_token, {
       maxAge: remember ? getCookieExpiryInDays(30) : getCookieExpiryInDays(7),
@@ -149,6 +155,7 @@ export const signinAuthController = async (
     return reply.status(200).send({
       success: true,
       message: "User signed in successfully.",
+      tokenExpiresIn: accessTokenExpiresIn,
       data: currentUser,
     });
   } catch (err: unknown) {
@@ -192,15 +199,6 @@ export const signupAuthController = async (
     const { email, password, fullname, terms } = req.body as IUserSignup;
 
     const result = await registerUser({ email, password, fullname, terms });
-
-    if (!result.success) {
-      return reply.status(result.statusCode).send({
-        success: false,
-        message: result.message,
-        error: result.error,
-      });
-    }
-
     const { user } = result.data as { user: User; session: Session };
 
     const newUser: IUserRegistration = {
